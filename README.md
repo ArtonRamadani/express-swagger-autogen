@@ -8,6 +8,7 @@ Automatically generates beautiful, interactive API documentation from your Expre
 
 - ✅ **Zero Configuration** - Works out of the box with sensible defaults
 - ✅ **Auto-Detection** - Automatically discovers all Express routes
+- ✅ **Smart Middleware Detection** - Automatically detects authentication and validation middleware
 - ✅ **Controller Analysis** - Extracts parameters from your controllers
 - ✅ **JWT Support** - Built-in Bearer token authentication
 - ✅ **Interactive UI** - Beautiful Swagger UI with "Try it out" functionality
@@ -46,7 +47,7 @@ app.listen(3000, () => {
 });
 ```
 
-That's it! Open `http://localhost:3000/api-docs` and see your documentation! 🎉
+That's it! Open `http://localhost:3000/api-docs` and see your documentation!
 
 ## Configuration Options
 
@@ -161,13 +162,34 @@ initSwagger(app, {
 
 ## Authentication
 
-The library automatically detects JWT authentication middleware. To use it in Swagger UI:
+The library automatically detects JWT authentication middleware by analyzing your route middleware chain. Any middleware with names like `verifyToken`, `authenticate`, `checkAuth`, or containing JWT verification code will be automatically recognized.
+
+### Using Authentication in Swagger UI
 
 1. Call your login endpoint
 2. Copy the JWT token from the response
 3. Click the "Authorize" 🔒 button at the top
-4. Paste your token
-5. All subsequent requests will include the token!
+4. Paste your token (without "Bearer" prefix)
+5. All subsequent requests will include the token automatically!
+
+### Supported Authentication Patterns
+
+The middleware analyzer detects various authentication patterns:
+
+```javascript
+// Pattern 1: Named middleware
+const verifyToken = (req, res, next) => { /* JWT verification */ };
+router.get('/protected', verifyToken, handler);
+
+// Pattern 2: Inline middleware
+router.get('/secure', authenticate, handler);
+
+// Pattern 3: Custom auth middleware
+const checkUserAuth = (req, res, next) => { /* auth logic */ };
+router.post('/data', checkUserAuth, handler);
+```
+
+All these patterns are automatically detected and documented with proper security requirements!
 
 ## Advanced Usage
 
@@ -224,13 +246,89 @@ const { spec } = initSwagger(app, options);
 console.log(spec); // Full OpenAPI 3.0 spec object
 ```
 
+### Middleware Detection Details
+
+The library includes a sophisticated middleware analyzer that examines your code to understand its purpose:
+
+**What Gets Analyzed:**
+- Middleware function names
+- Middleware file contents (if accessible)
+- Code patterns and indicators
+- Common library usage (express-validator, jsonwebtoken, etc.)
+
+**Authentication Detection Indicators:**
+- Function names: `auth`, `token`, `jwt`, `verify`, `authenticate`, `protected`, `secure`, `guard`
+- Code patterns: `jwt.verify()`, `req.headers.authorization`, `Bearer`, HTTP 401/403 responses
+- Automatically adds security requirements to endpoints
+
+**Validation Detection Indicators:**
+- Function names: `validat`, `check`, `sanitiz`, `rules`
+- Code patterns: `express-validator`, `validationResult()`, `body()`, `param()`, `query()`
+- Automatically documents validation errors
+
+**Example Middleware File Analysis:**
+```javascript
+// middleware/verifyToken.js
+const jwt = require('jsonwebtoken');
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid token' });
+  }
+};
+
+// ✅ This middleware will be automatically detected as authentication
+// because it contains: jwt.verify, authorization header, 401/403 responses
+```
+
+The analyzer looks for multiple indicators to ensure accurate detection!
+
 ## How It Works
 
 1. **Route Discovery**: Scans your Express app's router stack to find all routes
-2. **Middleware Analysis**: Detects authentication and validation middleware
+2. **Middleware Analysis**: Intelligently detects authentication and validation middleware by analyzing:
+   - Middleware function names (e.g., `verifyToken`, `authenticate`, `checkAuth`)
+   - Middleware code patterns (JWT verification, token validation)
+   - Common authentication libraries (jsonwebtoken, passport, etc.)
 3. **Parameter Extraction**: Automatically identifies path, query, and body parameters
 4. **Schema Generation**: Creates OpenAPI schemas from your route definitions
 5. **UI Generation**: Serves interactive Swagger UI with all your endpoints
+
+### Middleware Detection
+
+The library automatically detects middleware and applies appropriate security schemes:
+
+**Authentication Middleware** - Automatically detected by:
+- Function names containing: `auth`, `token`, `jwt`, `verify`, `authenticate`, `protected`, `secure`, `guard`
+- Code patterns: JWT verification, authorization headers, bearer tokens
+- Automatically adds 🔒 lock icon and security requirements in Swagger UI
+
+**Validation Middleware** - Automatically detected by:
+- Function names containing: `validat`, `check`, `sanitiz`, `rules`
+- Express-validator usage patterns
+- Automatically documents validation errors (400 responses)
+
+**Example:**
+```javascript
+// These middleware will be automatically detected
+router.post('/users', 
+  verifyToken,           // ✅ Detected as auth middleware
+  validateUser(),        // ✅ Detected as validation middleware
+  createUserHandler
+);
+```
+
+Minimal configuration needed - the library analyzes your middleware and generates appropriate documentation!
 
 ## Requirements
 

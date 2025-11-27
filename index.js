@@ -34,7 +34,6 @@ function initSwagger(app, options = {}) {
     swaggerUiOptions = {}
   } = options;
 
-  // Generate OpenAPI specification
   const swaggerSpec = generateOpenApiSpec(app, {
     title,
     version,
@@ -45,18 +44,63 @@ function initSwagger(app, options = {}) {
     manualSchemas
   });
 
-  // Default Swagger UI options
+  const customCss = `
+    .swagger-ui .topbar { display: none }
+    .swagger-ui-footer {
+      background: #1b1b1b;
+      color: #fff;
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 14px;
+      border-top: 1px solid #3b4151;
+      margin-top: 40px;
+    }
+    .swagger-ui-footer a {
+      color: #61affe;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .swagger-ui-footer a:hover {
+      text-decoration: underline;
+    }
+  `;
+
+  const customHtml = `
+    <div class="swagger-ui-footer">
+      📚 API documentation powered by 
+      <a href="https://www.npmjs.com/package/@artonramadani/express-swagger-autogen" target="_blank" rel="noopener noreferrer">
+        express-swagger-autogen
+      </a>
+      - Auto-generated with zero configuration
+    </div>
+  `;
+
   const defaultUiOptions = {
     explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
+    customCss: customCss + (swaggerUiOptions.customCss || ''),
     customSiteTitle: title,
+    customfavIcon: swaggerUiOptions.customfavIcon,
+    swaggerOptions: {
+      persistAuthorization: true,
+      ...swaggerUiOptions.swaggerOptions
+    },
+    customJsStr: `
+      window.addEventListener('load', function() {
+        const footer = document.createElement('div');
+        footer.innerHTML = \`${customHtml}\`;
+        const wrapper = document.querySelector('.swagger-ui .wrapper');
+        if (wrapper) {
+          wrapper.appendChild(footer.firstElementChild);
+        } else {
+          document.body.appendChild(footer.firstElementChild);
+        }
+      });
+    `,
     ...swaggerUiOptions
   };
 
-  // Setup Swagger UI endpoint
   app.use(docsPath, swaggerUi.serve, swaggerUi.setup(swaggerSpec, defaultUiOptions));
 
-  // Setup JSON spec endpoint
   app.get(`${docsPath}.json`, (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
