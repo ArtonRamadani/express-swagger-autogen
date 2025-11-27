@@ -1,6 +1,6 @@
 {
   "name": "@artonramadani/express-swagger-autogen",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Automatic Swagger/OpenAPI documentation generator for Express.js with controller analysis and minimal-config setup",
   "main": "index.js",
   "scripts": {
