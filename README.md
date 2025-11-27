@@ -18,7 +18,7 @@ Automatically generates beautiful, interactive API documentation from your Expre
 ## Installation
 
 ```bash
-npm install express-swagger-autogen
+npm install @artonramadani/express-swagger-autogen
 ```
 
 ## Quick Start
