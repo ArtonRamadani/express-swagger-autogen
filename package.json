@@ -1,0 +1,33 @@
+{
+  "name": "express-swagger-autogen",
+  "version": "1.0.0",
+  "description": "Automatic Swagger/OpenAPI documentation generator for Express.js with controller analysis and zero-config setup",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "express",
+    "swagger",
+    "openapi",
+    "documentation",
+    "api",
+    "auto-generate",
+    "swagger-ui"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "peerDependencies": {
+    "express": "^4.0.0 || ^5.0.0"
+  },
+  "dependencies": {
+    "swagger-ui-express": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/express-swagger-autogen"
+  }
+}
