@@ -1,12 +1,12 @@
 # Express Swagger Autogen
 
-🚀 **Zero-config automatic Swagger/OpenAPI documentation generator for Express.js**
+🚀 **Minimal-config automatic Swagger/OpenAPI documentation generator for Express.js**
 
 Automatically generates beautiful, interactive API documentation from your Express routes with minimal setup. No need to write extensive JSDoc comments or maintain separate documentation files!
 
 ## Features
 
-- ✅ **Zero Configuration** - Works out of the box with sensible defaults
+- ✅ **Minimal Configuration** - Works out of the box with sensible defaults
 - ✅ **Auto-Detection** - Automatically discovers all Express routes
 - ✅ **Smart Middleware Detection** - Automatically detects authentication and validation middleware
 - ✅ **Controller Analysis** - Extracts parameters from your controllers
@@ -47,7 +47,26 @@ app.listen(3000, () => {
 });
 ```
 
-That's it! Open `http://localhost:3000/api-docs` and see your documentation!
+That's it! Open `http://localhost:3000/api-docs` and see your documentation! 🎉
+
+### 📚 Complete Example
+
+Want to see a full working example? Check out the [example directory](./example) which includes:
+- Complete Express app with authentication
+- JWT middleware (automatically detected)
+- CRUD operations
+- Request/response schemas
+- Step-by-step guide
+
+**Quick start the example:**
+```bash
+cd example
+npm install
+npm start
+# Open http://localhost:3000/api-docs
+```
+
+See [example/QUICKSTART.md](./example/QUICKSTART.md) for detailed instructions!
 
 ## Configuration Options
 
@@ -84,7 +103,10 @@ initSwagger(app, {
     }
   },
   
-  // Manual Schemas (for complex endpoints)
+  // Manual Schemas - Option 1: Load from file (recommended)
+  manualSchemasPath: './swagger/manualSchemas.js',
+  
+  // Manual Schemas - Option 2: Define inline
   manualSchemas: {
     'createOrderHandler': {
       body: {
@@ -124,10 +146,15 @@ initSwagger(app, {
 
 ## Manual Schemas
 
-For complex endpoints with arrays or nested objects, you can provide manual schemas:
+For complex endpoints with arrays or nested objects, you can provide manual schemas in two ways:
+
+### Option 1: External File (Recommended)
+
+Create a separate file for your schemas to keep your code clean:
 
 ```javascript
-const manualSchemas = {
+// swagger/manualSchemas.js
+module.exports = {
   // Key is the handler function name
   'saveOrderHandler': {
     body: {
@@ -152,13 +179,54 @@ const manualSchemas = {
     }
   }
 };
+```
 
+```javascript
+// server.js
 initSwagger(app, {
   title: 'My API',
   basePath: '/api/v1',
-  manualSchemas
+  manualSchemasPath: './swagger/manualSchemas.js'  // Load from file
 });
 ```
+
+### Option 2: Inline Definition
+
+```javascript
+initSwagger(app, {
+  title: 'My API',
+  basePath: '/api/v1',
+  manualSchemas: {
+    'saveOrderHandler': {
+      body: {
+        items: { /* ... */ },
+        CustomerID: { type: 'integer', example: 789 }
+      }
+    }
+  }
+});
+```
+
+**Note:** You can use both approaches together. Inline schemas will override file-based schemas for the same handler.
+
+### Organizing Your Schemas
+
+We recommend creating a dedicated directory for Swagger configuration:
+
+```
+your-project/
+├── controllers/
+├── routes/
+├── middleware/
+├── swagger/                    # ← Swagger configuration
+│   ├── manualSchemas.js       # Schema definitions
+│   └── README.md              # Documentation
+└── server.js
+```
+
+This keeps your configuration organized and your `server.js` clean!
+
+📖 **See [MANUAL_SCHEMAS_GUIDE.md](./MANUAL_SCHEMAS_GUIDE.md) for complete guide with examples and best practices.**
 
 ## Authentication
 

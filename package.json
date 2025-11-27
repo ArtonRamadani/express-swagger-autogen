@@ -1,7 +1,7 @@
 {
   "name": "@artonramadani/express-swagger-autogen",
-  "version": "1.2.0",
-  "description": "Automatic Swagger/OpenAPI documentation generator for Express.js with controller analysis and zero-config setup",
+  "version": "1.2.2",
+  "description": "Automatic Swagger/OpenAPI documentation generator for Express.js with controller analysis and minimal-config setup",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

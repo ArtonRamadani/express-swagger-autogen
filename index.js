@@ -5,6 +5,8 @@
 
 const swaggerUi = require('swagger-ui-express');
 const { generateOpenApiSpec } = require('./lib/openApiGenerator');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * Initialize Swagger documentation for Express app
@@ -30,9 +32,32 @@ function initSwagger(app, options = {}) {
     servers = [],
     securitySchemes = {},
     manualSchemas = {},
+    manualSchemasPath = null,
     docsPath = '/api-docs',
     swaggerUiOptions = {}
   } = options;
+
+  // Load manual schemas from file if path is provided
+  let resolvedManualSchemas = manualSchemas;
+  
+  if (manualSchemasPath) {
+    try {
+      const absolutePath = path.isAbsolute(manualSchemasPath) 
+        ? manualSchemasPath 
+        : path.join(process.cwd(), manualSchemasPath);
+      
+      if (fs.existsSync(absolutePath)) {
+        const loadedSchemas = require(absolutePath);
+        // Merge with inline schemas, with inline taking precedence
+        resolvedManualSchemas = { ...loadedSchemas, ...manualSchemas };
+        console.log(`✅ Loaded manual schemas from: ${manualSchemasPath}`);
+      } else {
+        console.warn(`⚠️  Manual schemas file not found: ${manualSchemasPath}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error loading manual schemas from ${manualSchemasPath}:`, error.message);
+    }
+  }
 
   const swaggerSpec = generateOpenApiSpec(app, {
     title,
@@ -41,7 +66,7 @@ function initSwagger(app, options = {}) {
     basePath,
     servers,
     securitySchemes,
-    manualSchemas
+    manualSchemas: resolvedManualSchemas
   });
 
   const customCss = `
@@ -71,7 +96,7 @@ function initSwagger(app, options = {}) {
       <a href="https://www.npmjs.com/package/@artonramadani/express-swagger-autogen" target="_blank" rel="noopener noreferrer">
         express-swagger-autogen
       </a>
-      - Auto-generated with zero configuration
+      - Auto-generated with minimal configuration
     </div>
   `;
 
